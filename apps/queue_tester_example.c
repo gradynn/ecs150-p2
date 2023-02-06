@@ -27,13 +27,13 @@ void test_create(void)
 void test_queue_simple(void)
 {
 	int data = 3, *ptr;
-	queue_t q;
+	queue_t queue;
 
 	fprintf(stderr, "*** TEST queue_simple ***\n");
 
-	q = queue_create();
-	queue_enqueue(q, &data);
-	queue_dequeue(q, (void**)&ptr);
+	queue = queue_create();
+	queue_enqueue(queue, &data);
+	queue_dequeue(queue, (void**)&ptr);
 	TEST_ASSERT(ptr == &data);
 }
 
