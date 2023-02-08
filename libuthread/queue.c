@@ -4,86 +4,87 @@
 
 #include "queue.h"
 
-#define QUEUE_SIZE 10
+typedef struct node* node_t;
+
+struct node {
+	void* data;
+	struct node* next;
+};
 
 struct queue {
-	int front;
-	int rear;
-	int size;
-	int capacity;
-	void** q;
+	node_t head;
+	node_t tail;
+	int length;
 };
 
 queue_t queue_create(void)
 {
+	/* TODO Phase 1 */
 	queue_t queue = (queue_t) malloc(sizeof(struct queue));
-	queue->front = 0;
-	queue->rear = 0;
-	queue->size = 0;
-	queue->capacity = QUEUE_SIZE;
-	queue->q = (void**) malloc(sizeof(void*) * QUEUE_SIZE);
-
+	queue->length = 0;
 	return queue;
 }
 
 int queue_destroy(queue_t queue)
 {
-	if (queue == NULL) {
+	/* TODO Phase 1 */
+	if (queue == NULL || queue->length != 0)
 		return -1;
-	}
-	free(queue->q);
+
 	free(queue);
+
 	return 0;
 }
 
 int queue_enqueue(queue_t queue, void *data)
 {
-	if (queue == NULL || data == NULL)
-		return -1;
+	/* TODO Phase 1 */
+	node_t new_node = (node_t) malloc(sizeof(struct node));
+	new_node->data = data;
 
-	int i = queue->rear;
-	if (i == queue->capacity) {
-		queue->q = realloc(queue->q, 2 * sizeof(*queue->q));
-		queue->capacity = 2 * queue->capacity;
+	if (queue->length == 0) {
+		queue->head = new_node;
+		queue->tail = new_node;
+	} else {
+		queue->tail->next = new_node;
+		queue->tail = new_node;
 	}
-	
-	queue->q[i] = data;
-	queue->rear += 1;
-	queue->size += 1;
+
+	queue->tail->next = NULL;
+	queue->length++;
 
 	return 0;
 }
 
 int queue_dequeue(queue_t queue, void **data)
 {
-	if (queue == NULL || data == NULL || queue->size == 0)
-		return -1;
+	/* TODO Phase 1 */
+	*data = queue->tail->data;
 
-	data = &queue->q[queue->front];
-	queue->front += 1;
-	queue->size -= 1;
-	
+	node_t temp = queue->head;
+	queue->head = queue->head->next;
+	free(temp);
+
+	queue->length--;
+
 	return 0;
 }
 
 int queue_delete(queue_t queue, void *data)
 {
-	if (queue == NULL || data == NULL)
-		return -1;
+	node_t current = queue->head;
 
-	int i = queue->front;
-	while (i <= queue->rear) {
-		if (queue->q[i] != NULL) {
-			if (memcmp(queue->q[i], data, sizeof(*data)) == 0) {
-				queue->q[i] = NULL;
-				queue->size -= 1;
-
-				return 0;
-			}
+	while(current != NULL) {
+		if (current->data == data) {
+			node_t temp = current;
+			current = current->next;
+			free(temp);
+			queue->length--;
 		}
+		current = current->next;
 	}
 
-	return -1;
+	return 0;
 }
 
 int queue_iterate(queue_t queue, queue_func_t func)
@@ -91,11 +92,10 @@ int queue_iterate(queue_t queue, queue_func_t func)
 	if (queue == NULL || func == NULL)
 		return -1;
 
-	int i = queue->front;
-	while (i <= queue->rear) {
-		if (queue->q[i] != NULL)
-			func(queue, queue->q[i]);
-		i++;
+	node_t current = queue->head;
+	while (current != NULL) {
+		func(queue, current->data);
+		current = current->next;
 	}
 
 	return 0;
@@ -103,8 +103,5 @@ int queue_iterate(queue_t queue, queue_func_t func)
 
 int queue_length(queue_t queue)
 {
-	if (queue == NULL)
-		return -1;
-	
-	return queue->size;
+	return queue->length;
 }
