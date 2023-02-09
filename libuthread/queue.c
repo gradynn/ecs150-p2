@@ -72,20 +72,23 @@ int queue_dequeue(queue_t queue, void **data)
 
 int queue_delete(queue_t queue, void *data)
 {
+	if (queue == NULL || data == NULL)
+		return -1;
+
 	node_t current = queue->head;
 
 	while(current != NULL) {
 		if (current->data == data) {
-			node_t temp = current;
-			current = current->next;
-			free(temp);
-			queue->length--;
+			free(current);
+			return 0;
 		}
 		current = current->next;
 	}
 
-	return 0;
+	return -1;
 }
+
+
 
 int queue_iterate(queue_t queue, queue_func_t func)
 {
