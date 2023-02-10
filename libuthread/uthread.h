@@ -10,7 +10,7 @@
 typedef void (*uthread_func_t)(void *arg);
 
 /*
- * uthread_run - Run the multithreading library
+ * uthread_run - Run the multith reading library
  * @preempt: Preemption enable
  * @func: Function of the first thread to start
  * @arg: Argument to be passed to the first thread
