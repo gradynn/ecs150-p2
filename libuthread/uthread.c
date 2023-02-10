@@ -11,11 +11,16 @@
 
 struct uthread_tcb {
 	/* TODO Phase 2 */
+	int state; // 0: running, 1: ready, 2: blocked
+	uthread_func_t func;
+	void *arg;
+	ucontext_t context;
 };
 
 struct uthread_tcb *uthread_current(void)
 {
 	/* TODO Phase 2/3 */
+
 }
 
 void uthread_yield(void)
@@ -31,6 +36,12 @@ void uthread_exit(void)
 int uthread_create(uthread_func_t func, void *arg)
 {
 	/* TODO Phase 2 */
+	struct uthread_tcb *new_thread = malloc(sizeof(struct uthread_tcb));
+	new_thread->state = 1;
+	new_thread->func = func;
+	new_thread->arg = arg;
+	uthread_ctx_init(&new_thread->context, uthread_ctx_alloc_stack(), func, arg);
+	return 0;
 }
 
 int uthread_run(bool preempt, uthread_func_t func, void *arg)
@@ -41,10 +52,12 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 void uthread_block(void)
 {
 	/* TODO Phase 3 */
+	
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)
 {
 	/* TODO Phase 3 */
+	uthread->state = 1;
 }
 
