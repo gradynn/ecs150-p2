@@ -19,7 +19,6 @@ void hello(void *arg)
 
 int main(void)
 {
-	printf("Made it here inside uthread_hello.\n");
 	uthread_run(false, hello, NULL);
 
 	return 0;

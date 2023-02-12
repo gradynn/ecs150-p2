@@ -52,18 +52,15 @@ int uthread_ctx_init(uthread_ctx_t *uctx, void *top_of_stack,
 	/*
 	 * Initialize the passed context @uctx to the currently active context
 	 */
-	printf("made it here 1");
 	if (getcontext(uctx))
 		return -1;
 
-	printf("made it here 2");
 	/*
 	 * Change context @uctx's stack to the specified stack
 	 */
 	uctx->uc_stack.ss_sp = top_of_stack;
 	uctx->uc_stack.ss_size = UTHREAD_STACK_SIZE;
 
-	printf("made it here 3");
 	/*
 	 * Finish setting up context @uctx:
 	 * - the context will jump to function uthread_ctx_bootstrap() when
@@ -74,7 +71,6 @@ int uthread_ctx_init(uthread_ctx_t *uctx, void *top_of_stack,
 	makecontext(uctx, (void (*)(void)) uthread_ctx_bootstrap,
 		    2, func, arg);
 
-	printf("made it here 4");
 
 	return 0;
 }

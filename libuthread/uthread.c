@@ -10,6 +10,8 @@
 #include "uthread.h"
 #include "queue.h"
 
+#define UNUSED(x) (void)(x)
+
 queue_t ready_queue;
 queue_t blocked_queue;
 
@@ -30,7 +32,7 @@ struct uthread_tcb *uthread_current(void)
 void uthread_yield(void)
 {
 	/* TODO Phase 2 */
-	queue_enqueue(ready_queue, current_thread);
+	queue_enqueue(ready_queue, (void*)&current_thread);
 	uthread_ctx_switch(current_thread->context, idle_thread->context);
 }
 
@@ -45,6 +47,8 @@ int uthread_create(uthread_func_t func, void *arg)
 {
 	/* TODO Phase 2 */
 	struct uthread_tcb *new_thread = malloc(sizeof(struct uthread_tcb));
+	new_thread->context = malloc(sizeof(uthread_ctx_t));
+
 	uthread_ctx_init(new_thread->context, uthread_ctx_alloc_stack(), func, arg);
 	queue_enqueue(ready_queue, new_thread);
 
@@ -61,20 +65,21 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 	ready_queue = queue_create();
 	blocked_queue = queue_create();
 	current_thread = malloc(sizeof(struct uthread_tcb));
+	current_thread->context = malloc(sizeof(uthread_ctx_t));
 
 	/* Register execution flow of the application as the idle thread */
 	idle_thread = malloc(sizeof(struct uthread_tcb));
+	idle_thread->context = malloc(sizeof(uthread_ctx_t));
 
 	// Created a new (initiial) thread based on arguments
 	struct uthread_tcb *initial_thread = malloc(sizeof(struct uthread_tcb));
+	initial_thread->context = malloc(sizeof(uthread_ctx_t));
 	uthread_ctx_init(initial_thread->context, 
 						uthread_ctx_alloc_stack(), 
 						func, 
 						arg);
-	printf("Made it here 1.\n");
 	queue_enqueue(ready_queue, initial_thread);
 
-	printf("Made it here 2.\n");
 	// Infinite loop to run the scheduler
 	while (1) {
 		// If the ready queue is empty, then we are done
@@ -83,7 +88,7 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 		}
 
 		// Get the next thread from the ready queue
-		printf("Made it here n.\n");
+		printf("%i\n", queue_length(ready_queue));
 		queue_dequeue(ready_queue, (void*)&current_thread);
 		uthread_ctx_switch(idle_thread->context, current_thread->context);
 	}
