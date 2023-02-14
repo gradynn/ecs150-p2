@@ -32,24 +32,29 @@ struct uthread_tcb *uthread_current(void)
 void uthread_yield(void)
 {
 	/* TODO Phase 2 */
-	queue_enqueue(ready_queue, (void*)&current_thread);
-	uthread_ctx_switch(current_thread->context, idle_thread->context);
+	printf("Call to uthread_yield\n");
+
+	struct uthread_tcb *save_thread = malloc(sizeof(struct uthread_tcb));
+	save_thread->context = malloc(sizeof(uthread_ctx_t));
+	queue_enqueue(ready_queue, save_thread);
+	
+	uthread_ctx_switch(save_thread->context, idle_thread->context);
 }
 
 void uthread_exit(void)
 {
 	/* TODO Phase 2 */
-	uthread_ctx_destroy_stack(uthread_current()->context->uc_stack.ss_sp);
-	free(uthread_current());
+	uthread_ctx_switch(current_thread->context, idle_thread->context);
 }
 
 int uthread_create(uthread_func_t func, void *arg)
 {
 	/* TODO Phase 2 */
+	printf("Call to uthread_create\n");
 	struct uthread_tcb *new_thread = malloc(sizeof(struct uthread_tcb));
 	new_thread->context = malloc(sizeof(uthread_ctx_t));
-
 	uthread_ctx_init(new_thread->context, uthread_ctx_alloc_stack(), func, arg);
+
 	queue_enqueue(ready_queue, new_thread);
 
 	return 0;
@@ -72,23 +77,19 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 	idle_thread->context = malloc(sizeof(uthread_ctx_t));
 
 	// Created a new (initiial) thread based on arguments
-	struct uthread_tcb *initial_thread = malloc(sizeof(struct uthread_tcb));
-	initial_thread->context = malloc(sizeof(uthread_ctx_t));
-	uthread_ctx_init(initial_thread->context, 
-						uthread_ctx_alloc_stack(), 
-						func, 
-						arg);
-	queue_enqueue(ready_queue, initial_thread);
+	uthread_create(func, arg);
 
 	// Infinite loop to run the scheduler
 	while (1) {
 		// If the ready queue is empty, then we are done
 		if (queue_length(ready_queue) == 0) {
-			break;
+			printf("Ready queue is empty\n");
+			break; 
+		} else {
+			printf("Ready queue is not empty\n");
 		}
 
 		// Get the next thread from the ready queue
-		printf("%i\n", queue_length(ready_queue));
 		queue_dequeue(ready_queue, (void*)&current_thread);
 		uthread_ctx_switch(idle_thread->context, current_thread->context);
 	}

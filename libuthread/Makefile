@@ -5,6 +5,13 @@ obj := queue.o uthread.o context.o
 CC := gcc
 CFLAGS := -Wall -Werror -Wextra
 
+## Debug flag
+ifneq ($(D),1)
+CFLAGS    += -O2
+else
+CFLAGS    += -g
+endif
+
 all: $(lib)
 
 $(lib): $(obj)
