@@ -60,7 +60,7 @@ int queue_enqueue(queue_t queue, void *data)
 int queue_dequeue(queue_t queue, void **data)
 {
 	/* TODO Phase 1 */
-	*data = queue->tail->data;
+	*data = queue->head->data;
 
 	node_t temp = queue->head;
 	queue->head = queue->head->next;
@@ -80,6 +80,7 @@ int queue_delete(queue_t queue, void *data)
 
 	while(current != NULL) {
 		if (current->data == data) {
+			free(current->data);
 			free(current);
 			return 0;
 		}

@@ -125,16 +125,33 @@ void test_queue_iterate(void)
     TEST_ASSERT(queue_iterate(q, iterator_inc) == 0);
 }
 
+void test_deep(void)
+{
+    queue_t q = queue_create();
+    fprintf(stderr, "Queue length: %d\n", queue_length(q));
+
+    int data = 3;
+    queue_enqueue(q, &data);
+    fprintf(stderr, "Queue length: %d\n", queue_length(q));
+
+    int data2 = 4;
+    queue_enqueue(q, &data2);
+    fprintf(stderr, "Queue length: %d\n", queue_length(q));
+
+    int *ret_data;
+    queue_dequeue(q, (void**)&ret_data);
+    fprintf(stderr, "Queue length: %d\n", queue_length(q));
+    fprintf(stderr, "Dequeued data: %d\n", *ret_data);
+
+    int *ret_data2;
+    queue_dequeue(q, (void**)&ret_data2);
+    fprintf(stderr, "Queue length: %d\n", queue_length(q));
+    fprintf(stderr, "Dequeued data: %d\n", *ret_data2);
+}
+
 int main(void)
 {
-	test_create();
-	test_queue_simple();
-    test_queue_length();
-    test_queue_destroy_empty();
-    test_queue_destroy_nonempty();
-    test_queue_destroy_null();
-    test_queue_delete_value();
-    test_queue_iterate();
+	test_deep();
 
 	return 0;
 }
