@@ -13,12 +13,20 @@
 
 #define UNUSED(x) (void)(x)
 
+enum stat {
+	READY,
+	RUNNING,
+	BLOCKED,
+	ZOMBIE
+};
+
 queue_t ready_queue;
+queue_t blocked_queue;
 queue_t destroy_queue;
 
 struct uthread_tcb {
 	/* TODO Phase 2 */
-	int status; // 0 = ready, 1 = zombie
+	enum stat status; // 0 = ready, 1 = zombie
 	void* stack_ptr;
 	uthread_ctx_t *context;
 };
@@ -46,7 +54,7 @@ void uthread_yield(void)
 	/* Obtain the head of the queue */
     do {
         queue_dequeue(ready_queue, (void*)&current_tcb);
-    } while (current_tcb->status != 0); // eunsures that only valid processes are dequeued
+    } while (current_tcb->status != READY); // eunsures that only valid processes are dequeued
 
     /* Switch to the next thread */
     uthread_ctx_switch(save_tcb->context, current_tcb->context);
@@ -55,7 +63,7 @@ void uthread_yield(void)
 void uthread_exit(void)
 {
 	/* Reassign current tcb's status to zombie */
-    current_tcb->status = 1;
+    current_tcb->status = ZOMBIE;
 
 	/* holder to pass to ctx_switch */
 	struct uthread_tcb *junk_tcb = malloc(sizeof(struct uthread_tcb));
@@ -74,7 +82,7 @@ int uthread_create(uthread_func_t func, void *arg)
 	/* Initialize new thread */
 	new_tcb->stack_ptr = uthread_ctx_alloc_stack();
 	uthread_ctx_init(new_tcb->context, new_tcb->stack_ptr, func, arg);
-	new_tcb->status = 0;
+	new_tcb->status = READY;
 
 	/* Enqueue new thread in ready queue */
 	queue_enqueue(destroy_queue, new_tcb);
@@ -83,10 +91,7 @@ int uthread_create(uthread_func_t func, void *arg)
 
 int uthread_run(bool preempt, uthread_func_t func, void *arg)
 {
-
-	if (preempt) {
-		/* TODO Phase 3 */
-	}
+	preempt_start(preempt);
 
 	/* Initialize all global vars */
     ready_queue = queue_create(); // queue of ready threads
@@ -127,14 +132,31 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 
 void uthread_block(void)
 {
-	/* TODO Phase 3 */
+	/* Create new space to save a copy of the current tcb */
+    struct uthread_tcb *save_tcb = malloc(sizeof(struct uthread_tcb));
+	save_tcb->context = malloc(sizeof(uthread_ctx_t));
 
+	/* Copy current thread info to save tcb */
+	memcpy(save_tcb, current_tcb, sizeof(struct uthread_tcb));
+    
+    /* Add current tcb to the back of the queue to be resumed later */
+	save_tcb->status = BLOCKED;
+    queue_enqueue(blocked_queue, save_tcb);
+
+	/* Obtain the head of the queue */
+    do {
+        queue_dequeue(ready_queue, (void*)&current_tcb);
+    } while (current_tcb->status != READY); // eunsures that only valid processes are dequeued
+
+    /* Switch to the next thread */
+    uthread_ctx_switch(save_tcb->context, current_tcb->context);
 }
 
-/*
+
 void uthread_unblock(struct uthread_tcb *uthread)
 {
-	
-	
+	if (!queue_delete(blocked_queue, uthread)) {
+		uthread->status = READY;
+		queue_enqueue(ready_queue, uthread);
+	}
 }
-*/
