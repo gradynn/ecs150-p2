@@ -15,23 +15,62 @@
  */
 #define HZ 100
 
-void preempt_disable(void)
+struct sigaction sa2;
+
+void signal_handler(int signum)
 {
 	/* TODO Phase 4 */
+	uthread_yield();
+}
+
+void preempt_disable(void)
+{
+	/* Block signal SIGALRM */
+	sigset_t mask;
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGVTALRM);
+
+	sigprocmask(SIG_BLOCK, &mask, NULL);
 }
 
 void preempt_enable(void)
 {
-	/* TODO Phase 4 */
+	/* Unblock signal SIGALRM */
+	sigset_t mask;
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGVTALRM);
+
+	sigprocmask(SIG_UNBLOCK, &mask, NULL);
 }
 
 void preempt_start(bool preempt)
 {
-	/* TODO Phase 4 */
+	if (preempt == true) {
+		/* Set up signal handler*/
+		struct sigaction sa;
+		sa.sa_handler = signal_handler;
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+
+		/* Set up sig action to hold old config */
+		sa2.sa_handler = NULL;
+		sigemptyset(&sa2.sa_mask);
+		sa2.sa_flags = 0;
+
+		sigaction(SIGVTALRM, &sa, &sa2);
+		
+		/* Alarm */
+		settimer(ITIMER_VIRTUAL, HZ, 0);
+	}
+	
 }
 
 void preempt_stop(void)
 {
-	/* TODO Phase 4 */
+	/* Restore timer configuration (no timer) */
+	settimer(ITIMER_VIRTUAL, 0, 0);
+
+	/* Restore signal handler */
+	sigaction(SIGVTALRM, &sa2, NULL);
 }
 
