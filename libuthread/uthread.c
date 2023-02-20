@@ -10,6 +10,7 @@
 #include "private.h"
 #include "uthread.h"
 #include "queue.h"
+#include "preempt.c"
 
 #define UNUSED(x) (void)(x)
 
@@ -25,7 +26,6 @@ queue_t blocked_queue;
 queue_t destroy_queue;
 
 struct uthread_tcb {
-	/* TODO Phase 2 */
 	enum stat status; // 0 = ready, 1 = zombie
 	void* stack_ptr;
 	uthread_ctx_t *context;
@@ -47,7 +47,7 @@ void uthread_yield(void)
 
 	/* Copy current thread info to save tcb */
 	memcpy(save_tcb, current_tcb, sizeof(struct uthread_tcb));
-    
+
     /* Add current tcb to the back of the queue to be resumed later */
     queue_enqueue(ready_queue, save_tcb);
 
@@ -91,10 +91,15 @@ int uthread_create(uthread_func_t func, void *arg)
 
 int uthread_run(bool preempt, uthread_func_t func, void *arg)
 {
-	preempt_start(preempt);
+	if (preempt) {
+
+	}
+	//preempt_start(preempt);
 
 	/* Initialize all global vars */
     ready_queue = queue_create(); // queue of ready threads
+	blocked_queue = queue_create(); // queue of blocked threads
+	destroy_queue = queue_create(); // queue of threads to be destroyed
 
     current_tcb = malloc(sizeof(struct uthread_tcb)); // current thread
     current_tcb->context = malloc(sizeof(uthread_ctx_t));
@@ -126,7 +131,8 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
 
 	queue_destroy(ready_queue);
 	queue_destroy(destroy_queue);
-	
+	queue_destroy(blocked_queue);
+
 	return 0;
 }
 

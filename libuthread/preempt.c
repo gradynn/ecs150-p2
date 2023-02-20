@@ -19,7 +19,9 @@ struct sigaction sa2;
 
 void signal_handler(int signum)
 {
-	/* TODO Phase 4 */
+	if (signum) 
+		// do nothing
+
 	uthread_yield();
 }
 
@@ -60,15 +62,16 @@ void preempt_start(bool preempt)
 		sigaction(SIGVTALRM, &sa, &sa2);
 		
 		/* Alarm */
-		settimer(ITIMER_VIRTUAL, HZ, 0);
+		struct itimerval timer;
+		timer.it_value.tv_sec = 1 / HZ;
+		setitimer(ITIMER_VIRTUAL, &timer, 0);
 	}
-	
 }
 
 void preempt_stop(void)
 {
 	/* Restore timer configuration (no timer) */
-	settimer(ITIMER_VIRTUAL, 0, 0);
+	setitimer(ITIMER_VIRTUAL, 0, 0);
 
 	/* Restore signal handler */
 	sigaction(SIGVTALRM, &sa2, NULL);

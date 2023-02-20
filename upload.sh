@@ -1,4 +1,4 @@
-test_name='uthread_yield' 
+test_name='sem_simple' 
 
 echo "Enter CSIF username: "
 read username

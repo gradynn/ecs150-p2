@@ -1,6 +1,6 @@
 # Target library
 lib := libuthread.a
-obj := queue.o uthread.o context.o
+obj := queue.o uthread.o context.o sem.o preempt.o
 
 CC := gcc
 CFLAGS := -Wall -Werror -Wextra
