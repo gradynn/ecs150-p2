@@ -17,6 +17,9 @@ all: $(lib)
 $(lib): $(obj)
 	ar rcs $@ $(obj)
 	
+context.o: context.c private.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
