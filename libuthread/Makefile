@@ -20,6 +20,9 @@ $(lib): $(obj)
 context.o: context.c private.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+preempt.o: preempt.c private.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
