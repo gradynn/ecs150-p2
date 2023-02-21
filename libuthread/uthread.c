@@ -161,8 +161,7 @@ void uthread_block(void)
 
 void uthread_unblock(struct uthread_tcb *uthread)
 {
-	if (!queue_delete(blocked_queue, uthread)) {
-		uthread->status = READY;
-		queue_enqueue(ready_queue, uthread);
-	}
+	queue_delete(blocked_queue, uthread);
+	uthread->status = READY;
+	queue_enqueue(ready_queue, uthread);
 }

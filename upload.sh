@@ -1,4 +1,4 @@
-test_name='sem_simple' 
+test_name='sem_prime' 
 
 echo "Enter CSIF username: "
 read username

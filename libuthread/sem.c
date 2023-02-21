@@ -27,7 +27,6 @@ struct uthread_tcb {
 
 sem_t sem_create(size_t count)
 {
-	/* TODO Phase 3 */
 	sem_t sem = malloc(sizeof(struct semaphore));
 	sem->count = count;
 
@@ -38,7 +37,6 @@ sem_t sem_create(size_t count)
 
 int sem_destroy(sem_t sem)
 {
-	/* TODO Phase 3 */
 	if (sem == NULL || sem->count == 0) {
 		return -1;
 	}
@@ -50,15 +48,16 @@ int sem_destroy(sem_t sem)
 
 int sem_down(sem_t sem)
 {
-	/* TODO Phase 3 */
 	if (sem == NULL)
 		return -1;
 
 	while(1) {
 		if (sem->count > 0) {
 			sem->count--;
+
 			return 0;
 		} else {
+			queue_enqueue(sem->waiting_queue, uthread_current());
 			uthread_block();
 		}
 	}
@@ -66,26 +65,17 @@ int sem_down(sem_t sem)
 
 int sem_up(sem_t sem)
 {
-	printf("sem_up\n");
-	/* TODO Phase 3 */
 	if (sem == NULL)
 		return -1;
-
-	printf("Made it here 0\n");
 
 	struct uthread_tcb *current_tcb = malloc(sizeof(struct uthread_tcb));
 	current_tcb->context = malloc(sizeof(uthread_ctx_t));
 	current_tcb->stack_ptr = NULL;
 
-	printf("Made it here 1\n");
-
-	queue_dequeue(sem->waiting_queue, (void*)&current_tcb);
-
-	printf("Made it here 2\n");
-
-	uthread_unblock(current_tcb);
-
-	printf("Made it here 3\n");
+	if (queue_length(sem->waiting_queue) > 0) {
+		queue_dequeue(sem->waiting_queue, (void*)&current_tcb);
+		uthread_unblock(current_tcb);
+	}
  
 	sem->count++;
 
