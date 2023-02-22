@@ -1,4 +1,4 @@
-test_name='sem_prime' 
+test_name='test_preempt' 
 
 echo "Enter CSIF username: "
 read username

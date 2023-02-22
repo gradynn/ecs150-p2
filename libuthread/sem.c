@@ -2,12 +2,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "private.h"
 #include "queue.h"
 #include "sem.h"
-#include "private.h"
 
 struct semaphore {
-	/* TODO Phase 3 */
 	int count;
 	queue_t waiting_queue;
 };
@@ -20,16 +19,21 @@ enum stat {
 };
 
 struct uthread_tcb {
-	enum stat status; // 0 = ready, 1 = zombie
+	enum stat status;
 	void* stack_ptr;
 	uthread_ctx_t *context;
 };
 
 sem_t sem_create(size_t count)
 {
+	// Allocate space and initialize sem
 	sem_t sem = malloc(sizeof(struct semaphore));
-	sem->count = count;
+	
+	if (sem == NULL)
+		return NULL;
 
+	// initialize semaphore members
+	sem->count = count;
 	sem->waiting_queue = queue_create();
 
 	return sem;
@@ -37,6 +41,7 @@ sem_t sem_create(size_t count)
 
 int sem_destroy(sem_t sem)
 {
+	// Check error conditions
 	if (sem == NULL || sem->count == 0) {
 		return -1;
 	}
@@ -48,15 +53,18 @@ int sem_destroy(sem_t sem)
 
 int sem_down(sem_t sem)
 {
+	// Check error conditions
 	if (sem == NULL)
 		return -1;
 
+	// Decrease count or block thread
 	while(1) {
 		if (sem->count > 0) {
 			sem->count--;
 
 			return 0;
 		} else {
+			// Preserve in semaphore's waiting queue
 			queue_enqueue(sem->waiting_queue, uthread_current());
 			uthread_block();
 		}
@@ -65,6 +73,7 @@ int sem_down(sem_t sem)
 
 int sem_up(sem_t sem)
 {
+	// Check error conditions
 	if (sem == NULL)
 		return -1;
 
@@ -72,12 +81,13 @@ int sem_up(sem_t sem)
 	current_tcb->context = malloc(sizeof(uthread_ctx_t));
 	current_tcb->stack_ptr = NULL;
 
+	// Unblock a waiting thread if there is one
 	if (queue_length(sem->waiting_queue) > 0) {
 		queue_dequeue(sem->waiting_queue, (void*)&current_tcb);
 		uthread_unblock(current_tcb);
 	}
  
-	sem->count++;
+	sem->count++; // Add to semaphore count
 
 	return 0;
 }
